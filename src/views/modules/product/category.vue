@@ -7,6 +7,8 @@
       show-checkbox
       node-key="catId"
       :default-expanded-keys="expandedKey"
+      draggable
+      :allow-drop="allowDrop"
     >
       <span class="custom-tree-node" slot-scope="{ node, data }">
         <span>{{ node.label }}</span>
@@ -69,6 +71,7 @@
 export default {
   data() {
     return {
+      maxLevel: 0,
       title: "",
       menus: [],
       defaultProps: {
@@ -226,6 +229,42 @@ export default {
           //   message: "已取消删除",
           // });
         });
+    },
+
+    allowDrop(draggingNode, dropNode, type) {
+      // 被拖动的当前节点和父 节点层数和 不能大于三
+      console.log("draggingNode", draggingNode, dropNode, type);
+      this.countNodeLevel(draggingNode);
+      // 找到了拖拽结点的最大层级(深度)，那么就可以计算拖拽结点作为根节点的子树深度deep
+      let deep = Math.abs(this.maxLevel - draggingNode.level) + 1;
+      console.log("正在拖动的节点深度：", deep);
+
+      //  如果是拖拽到里面 结点前、后（两个结点之间）
+      if (type == "inner") {
+        console.log(deep + dropNode.level <= 3);
+        return deep + dropNode.level <= 3;
+      } else {
+        // 中（结点上）
+        console.log(deep + dropNode.parent.level <= 3);
+
+        return deep + dropNode.parent.level <= 3;
+      }
+    },
+
+    // 遍历子节点，求出最大深度
+    countNodeLevel(node) {
+      // 如果不是最后一级 就循环
+      if (node.childNodes != null && node.childNodes.length > 0) {
+        // 有多少层 循环多少次
+        for (let i = 0; i < node.childNodes.length; i++) {
+          if (node.childNodes[i].level > this.maxLevel) {
+            // 如果深度大于当前深度 则赋值
+            this.maxLevel = node.childNodes[i].level;
+          }
+          // 递归子节点 当前遍历的这个节点是否还存在子节点
+          this.countNodeLevel(node.childNodes[i]);
+        }
+      }
     },
   },
 
