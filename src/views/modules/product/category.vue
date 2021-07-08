@@ -9,6 +9,7 @@
       :default-expanded-keys="expandedKey"
       draggable
       :allow-drop="allowDrop"
+      @node-drop="handleDrop"
     >
       <span class="custom-tree-node" slot-scope="{ node, data }">
         <span>{{ node.label }}</span>
@@ -71,6 +72,7 @@
 export default {
   data() {
     return {
+      updataNodes: [],
       maxLevel: 0,
       title: "",
       menus: [],
@@ -258,6 +260,63 @@ export default {
           }
           // 递归子节点 当前遍历的这个节点是否还存在子节点
           this.countNodeLevel(node.childNodes[i]);
+        }
+      }
+    },
+
+    handleDrop(draggingNode, dropNode, dropType, ev) {
+      console.log("tree drop: ", draggingNode, dropNode, dropType);
+      // 当前节点最新父节点 ID
+      let pCid = 0;
+      // 节点排序
+      let siblings = null;
+      if (dropType == "before" || dropType == "after") {
+        //  兄弟关系  前后关系进入 则是进入的节点的父id
+        pCid =
+          dropNode.parent.data.catId == undefined
+            ? 0
+            : dropNode.parent.data.catId;
+        siblings = dropNode.parent.childNodes;
+      } else {
+        pCid = dropNode.data.catId;
+        siblings = dropNode.childNodes;
+      }
+
+      // 当前节点最新排序
+      for (let i = 0; i < siblings.length; i++) {
+        if (siblings[i].data.catId == draggingNode.data.catId) {
+          // 如果遍历的是当前正在拖拽的节点
+
+          let catLevel = draggingNode.level;
+          if (siblings[i].level != draggingNode.level) {
+            // 当前节点的层级发生变化
+            catLevel = siblings[i].level;
+            // 修改其子节点的层级
+            this.updataChildNodeLevel(siblings[i]);
+          }
+
+          this.updataNodes.push({
+            catId: siblings[i].data.catId == draggingNode.data.catId,
+            sort: i,
+            parentCid: pCid,
+          });
+        }
+        this.updataNodes.push({
+          catId: siblings[i].data.catId == draggingNode.data.catId,
+          sort: i,
+        });
+      }
+    },
+
+    updataChildNodeLevel(node) {
+      if (node.childNodes.length > 0) {
+        for (i = 0; i < node.childNodes.length; i++) {
+          var cNode = node.childNodes[i].data;
+          this.updataNodes.push({
+            catId: cNode.catId,
+            catLevel: node.childNodes[i].level,
+          });
+          this.updataChildNodeLevel(node.childNodes[i]);
         }
       }
     },
