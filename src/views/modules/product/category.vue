@@ -291,7 +291,7 @@ export default {
           if (siblings[i].level != draggingNode.level) {
             // 当前节点的层级发生变化
             catLevel = siblings[i].level;
-            // 修改其子节点的层级
+            // 修改其子节点的层级 ces
             this.updataChildNodeLevel(siblings[i]);
           }
 
